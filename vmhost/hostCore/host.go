@@ -44,6 +44,7 @@ var allFlags = []core.EnableEpochFlag{
 	vmhost.RuntimeMemStoreLimitFlag,
 	vmhost.RuntimeCodeSizeFixFlag,
 	vmhost.FixOOGReturnCodeFlag,
+	vmhost.ValidationOnGobDecodeFlag,
 }
 
 // vmHost implements HostContext interface.
@@ -217,6 +218,7 @@ func createActivationMap(hostParameters *vmhost.VMHostParameters) map[uint32]str
 	activationMap[hostParameters.EnableEpochsHandler.GetActivationEpoch(vmhost.MultiESDTTransferFixOnCallBackFlag)] = struct{}{}
 	activationMap[hostParameters.EnableEpochsHandler.GetActivationEpoch(vmhost.RemoveNonUpdatedStorageFlag)] = struct{}{}
 	activationMap[hostParameters.EnableEpochsHandler.GetActivationEpoch(vmhost.StorageAPICostOptimizationFlag)] = struct{}{}
+	activationMap[hostParameters.EnableEpochsHandler.GetActivationEpoch(vmhost.ValidationOnGobDecodeFlag)] = struct{}{}
 
 	return activationMap
 }

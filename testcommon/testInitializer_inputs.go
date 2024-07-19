@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/multiversx/mx-chain-core-go/core"
+	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/vm"
 	"github.com/multiversx/mx-chain-scenario-go/worldmock"
 	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
@@ -152,7 +153,7 @@ func DefaultTestVMForCallSigSegv(tb testing.TB, code []byte, balance *big.Int) (
 	}
 
 	customGasSchedule := config.GasScheduleMap(nil)
-	host := DefaultTestVMWithGasSchedule(tb, stubBlockchainHook, customGasSchedule, true)
+	host := DefaultTestVMWithGasSchedule(tb, stubBlockchainHook, customGasSchedule, true, nil)
 	return host, stubBlockchainHook
 }
 
@@ -247,6 +248,7 @@ func defaultTestVMForContracts(
 	contracts []*InstanceTestSmartContract,
 	gasSchedule config.GasScheduleMap,
 	wasmerSIGSEGVPassthrough bool,
+	enableEpochsHAndler vmhost.EnableEpochsHandler,
 ) (vmhost.VMHost, *contextmock.BlockchainHookStub) {
 
 	stubBlockchainHook := &contextmock.BlockchainHookStub{}
@@ -293,7 +295,7 @@ func defaultTestVMForContracts(
 		return false, nil
 	}
 
-	host := DefaultTestVMWithGasSchedule(tb, stubBlockchainHook, gasSchedule, wasmerSIGSEGVPassthrough)
+	host := DefaultTestVMWithGasSchedule(tb, stubBlockchainHook, gasSchedule, wasmerSIGSEGVPassthrough, enableEpochsHAndler)
 	return host, stubBlockchainHook
 }
 
@@ -346,7 +348,7 @@ func DefaultTestVMWithWorldMockWithGasSchedule(tb testing.TB, customGasSchedule 
 // DefaultTestVM creates a host configured with a blockchain hook
 func DefaultTestVM(tb testing.TB, blockchain vmcommon.BlockchainHook) vmhost.VMHost {
 	customGasSchedule := config.GasScheduleMap(nil)
-	return DefaultTestVMWithGasSchedule(tb, blockchain, customGasSchedule, false)
+	return DefaultTestVMWithGasSchedule(tb, blockchain, customGasSchedule, false, nil)
 }
 
 // DefaultTestVMWithGasSchedule creates a host with the provided blockchain hook and gas schedule
@@ -355,22 +357,16 @@ func DefaultTestVMWithGasSchedule(
 	blockchain vmcommon.BlockchainHook,
 	customGasSchedule config.GasScheduleMap,
 	wasmerSIGSEGVPassthrough bool,
+	enableEpochsHandler vmhost.EnableEpochsHandler,
 ) vmhost.VMHost {
 	gasSchedule := customGasSchedule
 	if gasSchedule == nil {
 		gasSchedule = config.MakeGasMapForTests()
 	}
 
-	esdtTransferParser, _ := parsers.NewESDTTransferParser(worldmock.WorldMarshalizer)
-	host, err := hostCore.NewVMHost(blockchain, &vmhost.VMHostParameters{
-		VMType:               DefaultVMType,
-		BlockGasLimit:        uint64(1000),
-		GasSchedule:          gasSchedule,
-		BuiltInFuncContainer: builtInFunctions.NewBuiltInFunctionContainer(),
-		ProtectedKeyPrefix:   []byte("E" + "L" + "R" + "O" + "N" + "D"),
-		ESDTTransferParser:   esdtTransferParser,
-		EpochNotifier:        &mock.EpochNotifierStub{},
-		EnableEpochsHandler: &mock.EnableEpochsHandlerStub{
+	enableEpochs := enableEpochsHandler
+	if check.IfNil(enableEpochs) {
+		enableEpochs = &mock.EnableEpochsHandlerStub{
 			IsFlagEnabledCalled: func(flag core.EnableEpochFlag) bool {
 				return flag == vmhost.StorageAPICostOptimizationFlag ||
 					flag == vmhost.MultiESDTTransferFixOnCallBackFlag ||
@@ -383,7 +379,19 @@ func DefaultTestVMWithGasSchedule(
 					flag == vmhost.DisableExecByCallerFlag ||
 					flag == vmhost.CheckExecuteOnReadOnlyFlag
 			},
-		},
+		}
+	}
+
+	esdtTransferParser, _ := parsers.NewESDTTransferParser(worldmock.WorldMarshalizer)
+	host, err := hostCore.NewVMHost(blockchain, &vmhost.VMHostParameters{
+		VMType:                   DefaultVMType,
+		BlockGasLimit:            uint64(1000),
+		GasSchedule:              gasSchedule,
+		BuiltInFuncContainer:     builtInFunctions.NewBuiltInFunctionContainer(),
+		ProtectedKeyPrefix:       []byte("E" + "L" + "R" + "O" + "N" + "D"),
+		ESDTTransferParser:       esdtTransferParser,
+		EpochNotifier:            &mock.EpochNotifierStub{},
+		EnableEpochsHandler:      enableEpochs,
 		WasmerSIGSEGVPassthrough: wasmerSIGSEGVPassthrough,
 		Hasher:                   worldmock.DefaultHasher,
 	})

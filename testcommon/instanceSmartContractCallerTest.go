@@ -47,12 +47,13 @@ func (mockSC *InstanceTestSmartContract) WithCode(code []byte) *InstanceTestSmar
 // InstancesTestTemplate holds the data to build a contract call test
 type InstancesTestTemplate struct {
 	testTemplateConfig
-	contracts          []*InstanceTestSmartContract
-	gasSchedule        config.GasScheduleMap
-	setup              func(vmhost.VMHost, *contextmock.BlockchainHookStub)
-	assertResults      func(vmhost.VMHost, *contextmock.BlockchainHookStub, *VMOutputVerifier)
-	host               vmhost.VMHost
-	blockchainHookStub *contextmock.BlockchainHookStub
+	contracts           []*InstanceTestSmartContract
+	gasSchedule         config.GasScheduleMap
+	setup               func(vmhost.VMHost, *contextmock.BlockchainHookStub)
+	assertResults       func(vmhost.VMHost, *contextmock.BlockchainHookStub, *VMOutputVerifier)
+	host                vmhost.VMHost
+	blockchainHookStub  *contextmock.BlockchainHookStub
+	enableEpochsHandler vmhost.EnableEpochsHandler
 }
 
 // BuildInstanceCallTest starts the building process for a contract call test
@@ -97,6 +98,12 @@ func (callerTest *InstancesTestTemplate) WithWasmerSIGSEGVPassthrough(wasmerSIGS
 	return callerTest
 }
 
+// WithEnableEpochsHandler provides the enable epochs handler to be used by the mock contract call test
+func (callerTest *InstancesTestTemplate) WithEnableEpochsHandler(handler vmhost.EnableEpochsHandler) *InstancesTestTemplate {
+	callerTest.enableEpochsHandler = handler
+	return callerTest
+}
+
 // AndAssertResults starts the test and asserts the results
 func (callerTest *InstancesTestTemplate) AndAssertResults(assertResults func(vmhost.VMHost, *contextmock.BlockchainHookStub, *VMOutputVerifier)) {
 	callerTest.assertResults = assertResults
@@ -121,7 +128,8 @@ func runTestWithInstances(callerTest *InstancesTestTemplate, reset bool) {
 				callerTest.tb,
 				callerTest.contracts,
 				callerTest.gasSchedule,
-				callerTest.wasmerSIGSEGVPassthrough)
+				callerTest.wasmerSIGSEGVPassthrough,
+				callerTest.enableEpochsHandler)
 		callerTest.setup(callerTest.host, callerTest.blockchainHookStub)
 	}
 

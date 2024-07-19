@@ -192,6 +192,11 @@ func GetStorageContext(vmHostPtr unsafe.Pointer) StorageContext {
 	return GetVMHost(vmHostPtr).Storage()
 }
 
+// GetEnableEpochsHandler returns the enable epochs handler
+func GetEnableEpochsHandler(vmHostPtr unsafe.Pointer) EnableEpochsHandler {
+	return GetVMHost(vmHostPtr).EnableEpochsHandler()
+}
+
 // WithFault returns true if the error is not nil, and uses the remaining gas if the execution has failed
 func WithFault(err error, vmHostPtr unsafe.Pointer, failExecution bool) bool {
 	runtime := GetVMHost(vmHostPtr)
