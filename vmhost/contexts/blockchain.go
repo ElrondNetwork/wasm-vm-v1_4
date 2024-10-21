@@ -13,14 +13,14 @@ var log = logger.GetOrCreate("vm/blockchainContext")
 
 type blockchainContext struct {
 	host           vmhost.VMHost
-	blockChainHook vmcommon.BlockchainHook
+	blockChainHook vmcommon.LegacyBlockchainHook
 	stateStack     []int
 }
 
 // NewBlockchainContext creates a new blockchainContext
 func NewBlockchainContext(
 	host vmhost.VMHost,
-	blockChainHook vmcommon.BlockchainHook,
+	blockChainHook vmcommon.LegacyBlockchainHook,
 ) (*blockchainContext, error) {
 
 	context := &blockchainContext{

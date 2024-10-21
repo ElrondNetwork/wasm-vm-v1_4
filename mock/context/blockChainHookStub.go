@@ -5,10 +5,10 @@ import (
 	"math/big"
 
 	"github.com/multiversx/mx-chain-core-go/data/esdt"
-	"github.com/multiversx/mx-chain-vm-common-go"
+	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
 )
 
-var _ vmcommon.BlockchainHook = (*BlockchainHookStub)(nil)
+var _ vmcommon.LegacyBlockchainHook = (*BlockchainHookStub)(nil)
 
 // BlockchainHookStub is used in tests to check that interface methods were called
 type BlockchainHookStub struct {

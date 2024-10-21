@@ -344,7 +344,7 @@ func DefaultTestVMWithWorldMockWithGasSchedule(tb testing.TB, customGasSchedule 
 }
 
 // DefaultTestVM creates a host configured with a blockchain hook
-func DefaultTestVM(tb testing.TB, blockchain vmcommon.BlockchainHook) vmhost.VMHost {
+func DefaultTestVM(tb testing.TB, blockchain vmcommon.LegacyBlockchainHook) vmhost.VMHost {
 	customGasSchedule := config.GasScheduleMap(nil)
 	return DefaultTestVMWithGasSchedule(tb, blockchain, customGasSchedule, false)
 }
@@ -352,7 +352,7 @@ func DefaultTestVM(tb testing.TB, blockchain vmcommon.BlockchainHook) vmhost.VMH
 // DefaultTestVMWithGasSchedule creates a host with the provided blockchain hook and gas schedule
 func DefaultTestVMWithGasSchedule(
 	tb testing.TB,
-	blockchain vmcommon.BlockchainHook,
+	blockchain vmcommon.LegacyBlockchainHook,
 	customGasSchedule config.GasScheduleMap,
 	wasmerSIGSEGVPassthrough bool,
 ) vmhost.VMHost {

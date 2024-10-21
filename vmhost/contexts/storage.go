@@ -14,7 +14,7 @@ var logStorage = logger.GetOrCreate("vm/storage")
 
 type storageContext struct {
 	host                       vmhost.VMHost
-	blockChainHook             vmcommon.BlockchainHook
+	blockChainHook             vmcommon.LegacyBlockchainHook
 	address                    []byte
 	stateStack                 [][]byte
 	protectedKeyPrefix         []byte
@@ -24,7 +24,7 @@ type storageContext struct {
 // NewStorageContext creates a new storageContext
 func NewStorageContext(
 	host vmhost.VMHost,
-	blockChainHook vmcommon.BlockchainHook,
+	blockChainHook vmcommon.LegacyBlockchainHook,
 	protectedKeyPrefix []byte,
 ) (*storageContext, error) {
 	if len(protectedKeyPrefix) == 0 {
