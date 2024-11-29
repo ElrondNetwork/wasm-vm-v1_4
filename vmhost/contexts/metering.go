@@ -33,7 +33,6 @@ func NewMeteringContext(
 	gasMap config.GasScheduleMap,
 	blockGasLimit uint64,
 ) (*meteringContext, error) {
-
 	gasSchedule, err := config.CreateGasConfig(gasMap)
 	if err != nil {
 		return nil, err
@@ -197,6 +196,12 @@ func (context *meteringContext) updateSCGasUsed() {
 	gasUsed = math.SubUint64(gasUsed, gasUsedByOthers)
 
 	context.gasUsedByAccounts[string(currentAccountAddress)] = gasUsed
+
+	logMetering.Trace("updateSCGasUsed",
+		"scAddress", currentAccountAddress,
+		"gasUsed", gasUsed,
+		"gasTransferred", gasTransferredByCurrentAccount,
+		"gasUsedByOthers", gasUsedByOthers)
 }
 
 // TrackGasUsedByBuiltinFunction computes the gas used by a builtin function
@@ -349,6 +354,9 @@ func (context *meteringContext) GetGasTrace() map[string]map[string][]uint64 {
 // RestoreGas subtracts the given gas from the gas used that is set in the runtime context.
 func (context *meteringContext) RestoreGas(gas uint64) {
 	gasUsed := context.host.Runtime().GetPointsUsed()
+	logMetering.Trace("metering.RestoreGas()",
+		"gasToRestore", gas,
+		"executionGasUsed", gasUsed)
 	if gas <= gasUsed {
 		gasUsed = math.SubUint64(gasUsed, gas)
 		context.host.Runtime().SetPointsUsed(gasUsed)
@@ -370,7 +378,14 @@ func (context *meteringContext) GasLeft() uint64 {
 		return 0
 	}
 
-	return gasProvided - gasUsed
+	gasLeft := gasProvided - gasUsed
+
+	logMetering.Trace("metering.GasLeft()",
+		"gasProvided", gasProvided,
+		"gasUsed", gasUsed,
+		"gasLeft", gasLeft)
+
+	return gasLeft
 }
 
 // GasSpentByContract calculates the entire gas consumption of the contract,
@@ -380,6 +395,10 @@ func (context *meteringContext) GasSpentByContract() uint64 {
 	executionGasUsed := runtime.GetPointsUsed()
 
 	gasSpent := math.AddUint64(context.initialCost, executionGasUsed)
+
+	logMetering.Trace("metering.GasSpentByContract()",
+		"executionGasUsed", executionGasUsed,
+		"totalGasSpent", gasSpent)
 	return gasSpent
 }
 
@@ -509,6 +528,12 @@ func (context *meteringContext) deductInitialGas(
 
 	context.initialCost = initialCost
 	context.gasForExecution = input.GasProvided - initialCost
+
+	logMetering.Trace("deductInitialGas",
+		"initialGasProvided", context.initialGasProvided,
+		"gasProvided", input.GasProvided,
+		"initialCost", context.initialCost,
+		"gasForExecution", context.gasForExecution)
 	return nil
 }
 
